@@ -1,0 +1,35 @@
+{
+    "name": "noem/state-machine-loader",
+    "description": "Constructs usable state machine instances from various data sources (Array, JSON,YAML)",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "biont",
+            "email": "email@example.com"
+        }
+    ],
+    "require": {
+        "noem/state-machine-interface": "dev-master",
+        "justinrainbow/json-schema": "^5.2"
+    },
+    "require-dev": {
+        "noem/state-machine": "dev-master",
+        "phpunit/phpunit": "^9.1",
+        "mockery/mockery": "^1.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Noem\\State\\Loader\\": "src/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../state-machine-interface"
+        },
+        {
+            "type": "path",
+            "url": "../state-machine"
+        }
+    ]
+}

@@ -1,0 +1,39 @@
+title: NoemPHP State Machine Interface
+description: >-
+
+baseurl: /state-machine-loader # Your repo name with a leading slash.
+show_downloads: false
+# Aux links for the upper right navigation
+aux_links:
+  "NoemPHP State Machine Loader on GitHub":
+    - https://github.com/NoemPHP/state-machine-loader
+
+# Footer "Edit this page on GitHub" link text
+gh_edit_repository: https://github.com/NoemPHP/state-machine-loader # Your repo GitHub URL
+
+# Everything above is repo specific.
+
+###############################################################
+
+# This section is repo specific. These can be omitted if defaults make sense.
+
+gh_edit_branch: master # The default branch of the repo. Default: main
+gh_edit_source: docs # The directory containing the docs. Default: docs
+
+###############################################################
+
+# Everything below should be copy and pasted into package repos
+remote_theme: pages-themes/cayman@v0.2.0
+
+###############################################################
+
+# Everything below should be copy and pasted into package repos
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jemoji
+
+permalink: pretty
+theme: jekyll-theme-cayman

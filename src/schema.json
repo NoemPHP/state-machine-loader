@@ -1,0 +1,47 @@
+{
+    "type": "object",
+    "additionalProperties": {
+        "$ref": "#/$defs/state"
+    },
+    "$defs": {
+        "state": {
+            "type": "object",
+            "required": [],
+            "properties": {
+                "parallel": {
+                    "type": "boolean"
+                },
+                "transitions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/transition"
+                    }
+                },
+                "children": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/$defs/state"
+                    }
+                }
+            }
+        },
+        "transition": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "object",
+                    "required": [
+                        "target"
+                    ],
+                    "properties": {
+                        "target": {
+                            "type": "string"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
