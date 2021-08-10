@@ -21,15 +21,5 @@
         "psr-4": {
             "Noem\\State\\Loader\\": "src/"
         }
-    },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../state-machine-interface"
-        },
-        {
-            "type": "path",
-            "url": "../state-machine"
-        }
-    ]
+    }
 }
