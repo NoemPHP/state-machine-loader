@@ -71,6 +71,7 @@ abstract class AbstractLoaderTest extends MockeryTestCase
         $array = [
             'foo' => ['label' => ''],
             'bar' => [
+                'initial' => 'bar_2',
                 'children' => [
                     'bar_1' => ['label' => ''],
                     'bar_2' => ['label' => ''],
@@ -96,6 +97,17 @@ abstract class AbstractLoaderTest extends MockeryTestCase
                 foreach ($bar->children() as $i => $child) {
                     self::assertInstanceOf(StateInterface::class, $child);
                 }
+                $initial = $bar->initial();
+                $this->assertNotNull(
+                    $initial,
+                    '"bar" should have been configured with an initial state'
+                );
+                $this->assertSame(
+                    $map->get('bar_2'),
+                    $bar->initial(),
+                    '"bar" should have been configured with an initial state "bar_2"'
+
+                );
             },
         ];
         $array = [

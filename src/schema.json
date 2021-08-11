@@ -11,6 +11,9 @@
                 "parallel": {
                     "type": "boolean"
                 },
+                "initial": {
+                    "type": "string"
+                },
                 "transitions": {
                     "type": "array",
                     "items": {
