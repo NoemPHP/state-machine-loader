@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Noem\State\Loader;
 
+use JsonSchema\Constraints\Constraint;
 use JsonSchema\Validator;
 use Noem\State\EventManager;
 use Noem\State\Observer\StateMachineObserver;
@@ -31,8 +32,11 @@ class ArrayLoader implements LoaderInterface
     public function __construct(array $stateGraph, private ?ContainerInterface $serviceLocator = null)
     {
         $validator = new Validator();
-        $asObject = json_decode(json_encode($stateGraph));
-        $validator->validate($asObject, (object) ['$ref' => 'file://'.realpath(__DIR__.'/schema.json')]);
+        $validator->validate(
+            $stateGraph,
+            (object) ['$ref' => 'file://'.realpath(__DIR__.'/schema.json')],
+            Constraint::CHECK_MODE_TYPE_CAST
+        );
         if (!$validator->isValid()) {
             throw new \InvalidArgumentException('Invalid Payload.'.json_encode($validator->getErrors()));
         }
