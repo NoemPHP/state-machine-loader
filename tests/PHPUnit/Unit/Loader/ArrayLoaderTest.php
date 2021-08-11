@@ -30,6 +30,6 @@ class ArrayLoaderTest extends AbstractLoaderTest
         );
         $sut = new ArrayLoader($inputData, $serviceLocator);
 
-        $validator($sut->definitions(), $sut->transitions());
+        $validator($sut->definitions(), $sut->transitions(), $sut->observer());
     }
 }

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Noem\State\Test\Unit\Loader;
 
 use Mockery\Adapter\Phpunit\MockeryTestCase;
+use Noem\State\EventManager;
+use Noem\State\ObservableStateMachineInterface;
 use Noem\State\State\HierarchicalState;
 use Noem\State\State\ParallelState;
 use Noem\State\State\SimpleState;
@@ -15,6 +17,14 @@ use Noem\State\Transition\TransitionProviderInterface;
 
 abstract class AbstractLoaderTest extends MockeryTestCase
 {
+
+    private array $appState = [];
+
+    public function setUp(): void
+    {
+        $this->appState = [];
+        parent::setUp();
+    }
 
     public function loaderData()
     {
@@ -33,9 +43,15 @@ abstract class AbstractLoaderTest extends MockeryTestCase
             ],
             [
                 'onEnterFoo' => function () {
+                    $this->appState['onEnterFoo'] = true;
                 },
             ],
-            function (StateDefinitions $map, TransitionProviderInterface $transitions) {
+            function (
+                StateDefinitions $map,
+                TransitionProviderInterface $transitions,
+                EventManager $observer
+            ) {
+                $fsm = \Mockery::mock(ObservableStateMachineInterface::class);
                 $this->assertTrue($map->has('foo'));
                 $this->assertTrue($map->has('bar'));
                 $this->assertTrue($map->has('baz'));
@@ -45,6 +61,11 @@ abstract class AbstractLoaderTest extends MockeryTestCase
                 $t = $transitions->getTransitionForTrigger($map->get('foo'), new \stdClass());
                 $this->assertInstanceOf(TransitionInterface::class, $t);
                 $this->assertSame($map->get('bar'), $t->target());
+                $observer->onEnterState($map->get('foo'), $fsm);
+                $this->assertTrue(
+                    isset($this->appState['onEnterFoo']) && $this->appState['onEnterFoo'],
+                    'onEnterFoo handler does not exist!'
+                );
             },
         ];
         $array = [

@@ -6,28 +6,26 @@ namespace Noem\State\Loader;
 
 use JsonSchema\Constraints\Constraint;
 use JsonSchema\Validator;
-use Noem\State\EventManager;
 use Noem\State\Observer\StateMachineObserver;
 use Noem\State\State\HierarchicalState;
 use Noem\State\State\ParallelState;
 use Noem\State\State\SimpleState;
 use Noem\State\State\StateDefinitions;
-use Noem\State\Transition\TransitionProvider;
 use Noem\State\Transition\TransitionProviderInterface;
 use Psr\Container\ContainerInterface;
 
 class ArrayLoader implements LoaderInterface
 {
 
-    private array $defininions = [];
+    private array $stateMap = [];
 
-    private $nestingLevel = 0;
+    private int $nestingLevel = 0;
 
-    private array $rawTransitions = [];
+    private TransitionProcessor $transitionProcessor;
 
-    private TransitionProvider $transitionProvider;
+    private EventProcessor $eventProcessor;
 
-    private array $events = [];
+    private ?StateDefinitions $definitions = null;
 
     public function __construct(array $stateGraph, private ?ContainerInterface $serviceLocator = null)
     {
@@ -40,14 +38,19 @@ class ArrayLoader implements LoaderInterface
         if (!$validator->isValid()) {
             throw new \InvalidArgumentException('Invalid Payload.'.json_encode($validator->getErrors()));
         }
-        $this->eventManager = new EventManager();
+        $this->eventProcessor = new EventProcessor();
+        $this->transitionProcessor = new TransitionProcessor();
+
         $this->processDefinitions($stateGraph);
-        $this->processTransitions($this->rawTransitions);
     }
 
     public function definitions(): StateDefinitions
     {
-        return new StateDefinitions($this->defininions);
+        if (!$this->definitions) {
+            $this->definitions = new StateDefinitions($this->stateMap);
+        }
+
+        return $this->definitions;
     }
 
     private function processDefinition(string $name, array $definition, array &$out = []): void
@@ -86,66 +89,11 @@ class ArrayLoader implements LoaderInterface
                 $state = new SimpleState($name);
                 break;
         }
-        $this->defininions[$name] = $state;
+        $this->stateMap[$name] = $state;
         $out[$name] = $state;
 
-        if (isset($definition['onEntry'])) {
-            $handle = $definition['onEntry'];
-            if (str_starts_with($handle, '@')) {
-                $service = $this->serviceLocator->get(substr($handle, 1));
-                $this->events['onEntry'][] = [$state, $service];
-            }
-        }
-
-        if (isset($definition['onExit'])) {
-            $handle = $definition['onExit'];
-            if (str_starts_with($handle, '@')) {
-                $service = $this->serviceLocator->get(substr($handle, 1));
-                $this->events['onExit'][] = [$state, $service];
-            }
-        }
-
-        if (isset($definition['action'])) {
-            $handle = $definition['action'];
-            if (str_starts_with($handle, '@')) {
-                $service = $this->serviceLocator->get(substr($handle, 1));
-                $this->events['action'][] = [$state, $service];
-            }
-        }
-
-        if (!isset($definition['transitions'])) {
-            return;
-        }
-        foreach ($definition['transitions'] as $t) {
-            if (is_string($t)) {
-                $t = ['target' => $t];
-            }
-            unset($definition['source']);
-            $t = array_merge(
-                [
-                    'source' => $name,
-                    'guard' => null,
-                ],
-                $t
-            );
-            if (is_array($t) && isset($t['target'])) {
-                $this->rawTransitions[] = $t;
-                continue;
-            }
-            throw new \InvalidArgumentException('Illegal transition definition');
-        }
-    }
-
-    private function processTransitions(array $rawTransitions)
-    {
-        $this->transitionProvider = new TransitionProvider($this->definitions());
-        foreach ($rawTransitions as $rawTransition) {
-            $this->transitionProvider->registerTransition(
-                $rawTransition['source'],
-                $rawTransition['target'],
-                $rawTransition['guard']
-            );
-        }
+        $this->eventProcessor->process($name, $definition, $this->nestingLevel);
+        $this->transitionProcessor->process($name, $definition, $this->nestingLevel);
     }
 
     private function processDefinitions(array $definitions, array &$out = []): void
@@ -159,31 +107,11 @@ class ArrayLoader implements LoaderInterface
 
     public function transitions(): TransitionProviderInterface
     {
-        return $this->transitionProvider;
+        return $this->transitionProcessor->create($this->definitions(), $this->serviceLocator);
     }
 
     public function observer(): StateMachineObserver
     {
-        $em = new EventManager();
-
-        isset($this->events['onEntry'])
-        and array_walk(
-            $this->events['onEntry'],
-            fn($h) => $em->addEnterStateHandler($h[0], $h[1])
-        );
-
-        isset($this->events['onExit'])
-        and array_walk(
-            $this->events['onExit'],
-            fn($h) => $em->addExitStateHandler($h[0], $h[1])
-        );
-
-        isset($this->events['action'])
-        and array_walk(
-            $this->events['action'],
-            fn($h) => $em->addActionHandler($h[0], $h[1])
-        );
-
-        return $em;
+        return $this->eventProcessor->create($this->definitions(), $this->serviceLocator);
     }
 }
