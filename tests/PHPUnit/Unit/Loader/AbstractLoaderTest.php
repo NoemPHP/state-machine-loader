@@ -35,6 +35,7 @@ abstract class AbstractLoaderTest extends MockeryTestCase
                         ['target' => 'bar'],
                     ],
                     'onEntry' => '@onEnterFoo',
+                    'onExit' => '@onExitFoo',
                 ],
                 'bar' => [
                     'transitions' => ['baz'],
@@ -44,6 +45,9 @@ abstract class AbstractLoaderTest extends MockeryTestCase
             [
                 'onEnterFoo' => function () {
                     $this->appState['onEnterFoo'] = true;
+                },
+                'onExitFoo' => function () {
+                    $this->appState['onExitFoo'] = true;
                 },
             ],
             function (
@@ -62,6 +66,7 @@ abstract class AbstractLoaderTest extends MockeryTestCase
                 $this->assertInstanceOf(TransitionInterface::class, $t);
                 $this->assertSame($map->get('bar'), $t->target());
                 $observer->onEnterState($map->get('foo'), $fsm);
+                $observer->onExitState($map->get('foo'), $fsm);
                 $this->assertTrue(
                     isset($this->appState['onEnterFoo']) && $this->appState['onEnterFoo'],
                     'onEnterFoo handler does not exist!'
@@ -149,7 +154,7 @@ abstract class AbstractLoaderTest extends MockeryTestCase
             [],
             function () {
             },
-            true,
+            true, // Yes, please throw
         ];
         yield '#4 Invalid state config 2' => [
             [
@@ -159,7 +164,7 @@ abstract class AbstractLoaderTest extends MockeryTestCase
             [],
             function () {
             },
-            true,
+            true,// Yes, please throw
         ];
         yield '#4 Invalid state config 3' => [
             [
@@ -173,7 +178,7 @@ abstract class AbstractLoaderTest extends MockeryTestCase
             [],
             function () {
             },
-            true,
+            true, // Yes, please throw
         ];
     }
 }

@@ -6,9 +6,11 @@ namespace Noem\State\Test\Unit\Loader;
 
 use Noem\State\Loader\ArrayLoader;
 use Noem\State\Loader\Exception\InvalidSchemaException;
+use Noem\State\Loader\YamlLoader;
 use Psr\Container\ContainerInterface;
+use Symfony\Component\Yaml\Yaml;
 
-class ArrayLoaderTest extends AbstractLoaderTest
+class YamlLoaderTest extends AbstractLoaderTest
 {
 
     /**
@@ -29,8 +31,26 @@ class ArrayLoaderTest extends AbstractLoaderTest
                 return $services[$id];
             }
         );
-        $sut = new ArrayLoader($inputData, $serviceLocator);
+        $inputData = Yaml::dump($inputData);
+        $sut = new YamlLoader($inputData, $serviceLocator);
 
         $validator($sut->definitions(), $sut->transitions(), $sut->observer());
+    }
+
+    public function testCustomYaml()
+    {
+        $yaml = <<<YAML
+foo: 
+  children:
+    bar:
+      label: bar
+    baz:
+      label: baz
+YAML;
+        $sut = new YamlLoader($yaml);
+        $def = $sut->definitions();
+        $this->assertTrue($def->has('foo'));
+        $this->assertTrue($def->has('bar'));
+        $this->assertTrue($def->has('baz'));
     }
 }

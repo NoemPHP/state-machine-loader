@@ -10,7 +10,8 @@
     ],
     "require": {
         "noem/state-machine-interface": "dev-master",
-        "justinrainbow/json-schema": "^5.2"
+        "justinrainbow/json-schema": "^5.2",
+        "symfony/yaml": "^5.3"
     },
     "require-dev": {
         "noem/state-machine": "dev-master",

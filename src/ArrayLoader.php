@@ -6,6 +6,7 @@ namespace Noem\State\Loader;
 
 use JsonSchema\Constraints\Constraint;
 use JsonSchema\Validator;
+use Noem\State\Loader\Exception\InvalidSchemaException;
 use Noem\State\Observer\StateMachineObserver;
 use Noem\State\State\HierarchicalState;
 use Noem\State\State\ParallelState;
@@ -37,6 +38,9 @@ class ArrayLoader implements LoaderInterface
     ) {
     }
 
+    /**
+     * @throws InvalidSchemaException
+     */
     public function definitions(): StateDefinitions
     {
         if (!$this->definitions) {
@@ -47,7 +51,7 @@ class ArrayLoader implements LoaderInterface
                 Constraint::CHECK_MODE_TYPE_CAST
             );
             if (!$validator->isValid()) {
-                throw new \InvalidArgumentException('Invalid Payload.'.json_encode($validator->getErrors()));
+                throw new InvalidSchemaException($validator->getErrors());
             }
             $this->eventProcessor = new EventProcessor();
             $this->transitionProcessor = new TransitionProcessor();
