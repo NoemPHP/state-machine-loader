@@ -40,5 +40,5 @@ Todo
 
 ## Service Locator
 You can optionally pass a PSR-11 `ContainerInterface` into the loader object. It will be used whenever a callback is prefixed with `"@"`.
-Yor example, if you define `onEntry: "@onEnterFoo"`, this will result in `$callback = $container->get('onEnterFoo')`.
+For example, if you define `onEntry: "@onEnterFoo"`, this will result in `$callback = $container->get('onEnterFoo')`.
 You can use this to integrate your framework's DI container into the FSM's event handling.
