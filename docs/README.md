@@ -14,6 +14,7 @@ All input data is validated against a JSON schema using [justinrainbow/json-sche
 The raw schema file can be found at [src/schema.json](../src/schema.json)
 Below is a description of all the relevant entities:
 ### State
+
 |Key|Type|Required|Example|Comment  |
 |---|---|---|---|---|
 |transitions|array/string| - | `["target-state"]`| List of transition definitions |
