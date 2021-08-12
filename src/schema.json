@@ -25,6 +25,15 @@
                     "additionalProperties": {
                         "$ref": "#/$defs/state"
                     }
+                },
+                "onEntry": {
+                    "$ref": "#/$defs/callback"
+                },
+                "onExit": {
+                    "$ref": "#/$defs/callback"
+                },
+                "action": {
+                    "$ref": "#/$defs/callback"
                 }
             }
         },
@@ -41,10 +50,16 @@
                     "properties": {
                         "target": {
                             "type": "string"
+                        },
+                        "guard": {
+                            "$ref": "#/$defs/callback"
                         }
                     }
                 }
             ]
+        },
+        "callback": {
+            "type": "string"
         }
     }
 }
