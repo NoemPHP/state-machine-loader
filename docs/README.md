@@ -16,12 +16,12 @@ Below is a description of all the relevant entities:
 ### State
 |Key|Type|Required|Example|Comment  |
 |---|---|---|---|---|
-|transitions|array/string| - | `["target-state"]`| see [Transition](#transition)  |
-|children|object| - |`{"subState": {}}`| `Dictionary<string,State>`. Recursion |
-|parallel|boolean| - |`true`| Flag this state as parallel.<br>All of its children will be active at the same time  |
-|initial|string| - | `"subState"` | Only used for hierarchical states.<br>Determines which child state is initially active.<br> Defaults to the first child if omitted|
-|onEntry|callback| - | `"my_php_function"`<br>`"@myContainerEntry"` | An action to run when this state is entered. <br>See [Callback](#callback)   |
-|onExit|callback| - | `"my_php_function"`<br>`"@myContainerEntry"` | An action to run when this state is exited. <br>See [Callback](#callback)   |
+|transitions|array/string| - | `["target-state"]`| see [Transition](#transition)|
+|children|object| - |`{"subState": {}}`| `Dictionary<string,State>`. Recursion|
+|parallel|boolean| - |`true`| Flag this state as parallel. All of its children will be active at the same time|
+|initial|string| - | `"subState"` | Only used for hierarchical states. Determines which child state is initially active. Defaults to the first child if omitted|
+|onEntry|callback| - | `"my_php_function"` `"@myContainerEntry"` | An action to run when this state is entered. See [Callback](#callback)|
+|onExit|callback| - | `"my_php_function"` `"@myContainerEntry"` | An action to run when this state is exited. See [Callback](#callback)|
 
 
 
