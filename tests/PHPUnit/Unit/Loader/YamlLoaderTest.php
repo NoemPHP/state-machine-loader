@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Noem\State\Test\Unit\Loader;
 
-use Noem\State\Loader\ArrayLoader;
 use Noem\State\Loader\Exception\InvalidSchemaException;
 use Noem\State\Loader\YamlLoader;
 use Psr\Container\ContainerInterface;
@@ -42,10 +41,8 @@ class YamlLoaderTest extends AbstractLoaderTest
         $yaml = <<<YAML
 foo: 
   children:
-    bar:
-      label: bar
-    baz:
-      label: baz
+    bar: {}
+    baz: {}
 YAML;
         $sut = new YamlLoader($yaml);
         $def = $sut->definitions();
