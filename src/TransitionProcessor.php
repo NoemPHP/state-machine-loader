@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Noem\State\Loader;
 
+use Noem\State\Loader\Exception\InvalidSchemaException;
 use Noem\State\State\StateDefinitions;
 use Noem\State\Transition\TransitionProvider;
 use Noem\State\Transition\TransitionProviderInterface;
+use Noem\State\Util\ParameterDeriver;
 use Psr\Container\ContainerInterface;
+
 /**
  * @extends ProcessorInterface<TransitionProviderInterface>
  */
 class TransitionProcessor implements ProcessorInterface
 {
+
+    use ServiceResolverTrait;
 
     private array $rawTransitions = [];
 
@@ -46,18 +51,55 @@ class TransitionProcessor implements ProcessorInterface
      * @param ContainerInterface $serviceLocator
      *
      * @return TransitionProviderInterface
+     * @throws Exception\InvalidSchemaException
      */
-    public function create(StateDefinitions $stateDefinitions, ContainerInterface $serviceLocator): TransitionProviderInterface
-    {
+    public function create(
+        StateDefinitions $stateDefinitions,
+        ContainerInterface $serviceLocator
+    ): TransitionProviderInterface {
         $transitionProvider = new TransitionProvider($stateDefinitions);
         foreach ($this->rawTransitions as $rawTransition) {
+            $guard = $this->generateGuardParameter($rawTransition['guard'], $serviceLocator);
             $transitionProvider->registerTransition(
                 $rawTransition['source'],
                 $rawTransition['target'],
-                $rawTransition['guard']
+                $guard
             );
         }
 
         return $transitionProvider;
+    }
+
+    /**
+     * @throws Exception\InvalidSchemaException
+     */
+    private function generateGuardParameter(
+        string|null $definition,
+        ContainerInterface $serviceLocator
+    ): string|callable|null {
+        if (!$definition) {
+            return null;
+        }
+        if ($this->isService($definition)) {
+            return $this->assertValidGuard($this->resolveService($definition, $serviceLocator), $definition);
+        }
+
+        if (class_exists($definition) || interface_exists($definition)) {
+            return $definition;
+        }
+        throw new InvalidSchemaException();
+    }
+
+    private function assertValidGuard(callable $guard, string $defined): callable
+    {
+        $returns = ParameterDeriver::getReturnType($guard);
+        if ($returns === 'bool') {
+            return $guard;
+        }
+        throw new InvalidSchemaException(
+            [
+                $defined => "Guards callbacks must return boolean",
+            ]
+        );
     }
 }

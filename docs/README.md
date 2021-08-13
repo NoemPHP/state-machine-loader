@@ -11,7 +11,7 @@ Install this package via composer:
 ## Schema
 
 All input data is validated against a JSON schema using [justinrainbow/json-schema](https://github.com/justinrainbow/json-schema).
-The raw schema file can be found at [src/schema.json](../src/schema.json)
+The raw schema file can be found at [src/schema.json](https://github.com/NoemPHP/state-machine-loader/blob/master/src/schema.json)
 Below is a description of all the relevant entities:
 ### State
 
@@ -50,10 +50,48 @@ You can use this to integrate your framework's DI container into the FSM's event
 
 ## Full example
 
+All event handlers are assumed to be configured in a Service Container.
+
+<!-- EXAMPLE -->
+
 ```yaml
-
 off:
-  transitions:
-    -
+    transitions:
+        - on # Shorthand used
 
+on:
+    parallel: true
+    onEntry: '@onBooted'
+    children:
+        foo: 
+            action: '@sayMyName'
+        
+        bar: 
+            action: '@sayMyName'
+        baz: 
+            initial: 'substate2'
+            action: '@sayMyName'
+            children:
+                substate1: 
+                    action: '@sayMyName'
+                
+                substate2: 
+                    action: '@sayMyName'
+                    transitions:
+                        - target: 'substate3'
+                          guard: '@guardSubstate3'
+                substate3: 
+                    action: '@sayMyName'
+        
+    transitions:
+            # If an exception is used as a trigger,
+            # it can be used to perform a graceful shutdown
+        -   target: error
+            guard: Throwable
+
+error:
+    onEntry: '@onException'
+    transitions:
+        - off
 ```
+<!-- EXAMPLE -->

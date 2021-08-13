@@ -32,10 +32,13 @@ class ArrayLoader implements LoaderInterface
 
     private ?StateDefinitions $definitions = null;
 
+    private ContainerInterface $serviceLocator;
+
     public function __construct(
         private array $stateGraph,
-        private ?ContainerInterface $serviceLocator = null
+        ?ContainerInterface $serviceLocator = null
     ) {
+        $this->serviceLocator= $serviceLocator ?? new FallbackContainer();
     }
 
     /**
@@ -141,11 +144,17 @@ class ArrayLoader implements LoaderInterface
         $this->nestingLevel--;
     }
 
+    /**
+     * @throws InvalidSchemaException
+     */
     public function transitions(): TransitionProviderInterface
     {
         return $this->transitionProcessor->create($this->definitions(), $this->serviceLocator);
     }
 
+    /**
+     * @throws InvalidSchemaException
+     */
     public function observer(): StateMachineObserver
     {
         return $this->eventProcessor->create($this->definitions(), $this->serviceLocator);

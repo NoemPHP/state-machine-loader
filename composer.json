@@ -9,8 +9,9 @@
         }
     ],
     "require": {
-        "noem/state-machine-interface": "dev-master",
         "justinrainbow/json-schema": "^5.2",
+        "noem/state-machine-interface": "dev-master",
+        "psr/container": "^2.0",
         "symfony/yaml": "^5.3"
     },
     "require-dev": {
@@ -22,5 +23,13 @@
         "psr-4": {
             "Noem\\State\\Loader\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Noem\\State\\Loader\\Tests\\": "tests/PHPUnit/src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
     }
 }

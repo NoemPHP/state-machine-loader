@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Noem\State\Loader;
 
 use Noem\State\EventManager;
+use Noem\State\Loader\Exception\InvalidSchemaException;
 use Noem\State\State\StateDefinitions;
+use Noem\State\Util\ParameterDeriver;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -13,6 +15,8 @@ use Psr\Container\ContainerInterface;
  */
 class EventProcessor implements ProcessorInterface
 {
+
+    use ServiceResolverTrait;
 
     private array $events = [];
 
@@ -25,6 +29,9 @@ class EventProcessor implements ProcessorInterface
         }
     }
 
+    /**
+     * @throws InvalidSchemaException
+     */
     public function create(StateDefinitions $stateDefinitions, ContainerInterface $serviceLocator): EventManager
     {
         $em = new EventManager();
@@ -52,21 +59,25 @@ class EventProcessor implements ProcessorInterface
             $this->events['action'],
             fn($h) => $em->addActionHandler(
                 $stateDefinitions->get($h[0]),
-                $this->resolveService($h[1], $serviceLocator)
+                $this->assertValidAction(
+                    $this->resolveService($h[1], $serviceLocator),
+                    $h,
+                )
             )
         );
 
         return $em;
     }
 
-    private function resolveService($serviceDefinition, ContainerInterface $serviceLocator): callable
+    private function assertValidAction(callable $handler, array $rawDefinition): callable
     {
-        if (is_callable($serviceDefinition)) {
-            return $serviceDefinition;
+        try {
+            $parameter = ParameterDeriver::getParameterType($handler);
+        } catch (\InvalidArgumentException $e) {
+            [$state, $serviceName] = $rawDefinition;
+            throw new InvalidSchemaException([$state => "Invalid event handler '{$serviceName}'"], $e);
         }
-        if (str_starts_with($serviceDefinition, '@')) {
-            return $serviceLocator->get(substr($serviceDefinition, 1));
-        }
-        //TODO throw
+
+        return $handler;
     }
 }
