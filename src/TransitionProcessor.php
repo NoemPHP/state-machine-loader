@@ -16,7 +16,6 @@ use Psr\Container\ContainerInterface;
  */
 class TransitionProcessor implements ProcessorInterface
 {
-
     use ServiceResolverTrait;
 
     private array $rawTransitions = [];

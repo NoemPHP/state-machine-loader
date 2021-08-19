@@ -38,7 +38,7 @@ class ArrayLoader implements LoaderInterface
         private array $stateGraph,
         ?ContainerInterface $serviceLocator = null
     ) {
-        $this->serviceLocator= $serviceLocator ?? new FallbackContainer();
+        $this->serviceLocator = $serviceLocator ?? new FallbackContainer();
     }
 
     /**
@@ -50,7 +50,7 @@ class ArrayLoader implements LoaderInterface
             $validator = new Validator();
             $validator->validate(
                 $this->stateGraph,
-                (object) ['$ref' => 'file://'.realpath(__DIR__.'/schema.json')],
+                (object) ['$ref' => 'file://' . realpath(__DIR__ . '/schema.json')],
                 Constraint::CHECK_MODE_TYPE_CAST
             );
             if (!$validator->isValid()) {
