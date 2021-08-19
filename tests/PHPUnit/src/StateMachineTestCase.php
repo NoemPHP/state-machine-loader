@@ -11,29 +11,26 @@ use Noem\State\StateMachine;
 use PHPUnit\Framework\Assert;
 use Psr\Container\ContainerInterface;
 
-abstract class StateMachineTestCase extends MockeryTestCase
+abstract class StateMachineTestCase extends LoaderTestCase
 {
 
     private StateMachine $machine;
 
     /**
-     * @param array $stateGraph
+     * @param string|array $stateGraph
      * @param string $initialState
      * @param array $serviceConfig
+     *
+     * @return StateMachine
+     * @throws \JsonException
      */
     protected function configureStateMachine(
-        array $stateGraph,
+        string|array $stateGraph,
         string $initialState,
         array $serviceConfig = []
 
     ): StateMachine {
-        $serviceLocator = \Mockery::mock(ContainerInterface::class);
-        $serviceLocator->shouldReceive('get')->andReturnUsing(
-            function ($id) use ($serviceConfig) {
-                return $serviceConfig[$id];
-            }
-        );
-        $loader = new ArrayLoader($stateGraph, $serviceLocator);
+        $loader = $this->configureLoader($stateGraph, $serviceConfig);
         $tree = $loader->definitions();
 
         $this->machine = new StateMachine(
@@ -45,11 +42,6 @@ abstract class StateMachineTestCase extends MockeryTestCase
         return $this->machine;
     }
 
-    protected function getStateMachine(): StateMachine
-    {
-        return $this->machine;
-    }
-
     protected function assertIsInState(string $state, ?string $message = null)
     {
         $this->assertThat(
@@ -57,6 +49,11 @@ abstract class StateMachineTestCase extends MockeryTestCase
             Assert::isTrue(),
             $message ?? sprintf('The state machine should currently be in state "%s"', $state)
         );
+    }
+
+    protected function getStateMachine(): StateMachine
+    {
+        return $this->machine;
     }
 
     protected function assertNotInState(string $state, ?string $message = null)
