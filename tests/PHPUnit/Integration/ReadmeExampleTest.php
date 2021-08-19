@@ -69,12 +69,12 @@ class ReadmeExampleTest extends StateMachineTestCase
 
         $payload = (object)['result' => []];
         $m->action($payload);
-        //TODO We probably want handlers to bubble up the tree. These expectations need to change in the future
+        
         $expected = [
+            'substate2',
             'foo',
             'bar',
             'baz',
-            'substate2',
 
         ];
         $this->assertSame($expected, $payload->result);
@@ -90,7 +90,6 @@ class ReadmeExampleTest extends StateMachineTestCase
 
         $m->trigger(new \Exception("some_error"));
         $this->assertTrue($m->isInState('error'));
-
     }
 
     private function createContainer(array $services): ContainerInterface

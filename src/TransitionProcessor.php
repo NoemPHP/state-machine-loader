@@ -90,6 +90,9 @@ class TransitionProcessor implements ProcessorInterface
         throw new InvalidSchemaException();
     }
 
+    /**
+     * @throws InvalidSchemaException
+     */
     private function assertValidGuard(callable $guard, string $defined): callable
     {
         $returns = ParameterDeriver::getReturnType($guard);
