@@ -6,6 +6,11 @@ namespace Noem\State\Loader;
 
 use JsonSchema\Constraints\Constraint;
 use JsonSchema\Validator;
+use Nette\Schema\Elements\Type;
+use Nette\Schema\Expect;
+use Nette\Schema\Message;
+use Nette\Schema\Processor;
+use Nette\Schema\ValidationException;
 use Noem\State\Loader\Exception\InvalidSchemaException;
 use Noem\State\Observer\StateMachineObserver;
 use Noem\State\State\HierarchicalState;
@@ -44,18 +49,18 @@ class ArrayLoader implements LoaderInterface
     /**
      * @throws InvalidSchemaException
      */
+    public function transitions(): TransitionProviderInterface
+    {
+        return $this->transitionProcessor->create($this->definitions(), $this->serviceLocator);
+    }
+
+    /**
+     * @throws InvalidSchemaException
+     */
     public function definitions(): StateDefinitions
     {
         if (!$this->definitions) {
-            $validator = new Validator();
-            $validator->validate(
-                $this->stateGraph,
-                (object) ['$ref' => 'file://' . realpath(__DIR__ . '/schema.json')],
-                Constraint::CHECK_MODE_TYPE_CAST
-            );
-            if (!$validator->isValid()) {
-                throw new InvalidSchemaException($validator->getErrors());
-            }
+            $this->assertValidGraph();
             $this->eventProcessor = new EventProcessor();
             $this->transitionProcessor = new TransitionProcessor();
 
@@ -64,6 +69,51 @@ class ArrayLoader implements LoaderInterface
         }
 
         return $this->definitions;
+    }
+
+    /**
+     * @throws InvalidSchemaException
+     */
+    private function assertValidGraph()
+    {
+        $callbackSchema = Expect::anyOf(Expect::string(), Expect::type('callable'));
+
+        $transitionSchema = Expect::anyOf(
+            Expect::string(),
+            Expect::structure([
+                                  'target' => Expect::string()->required(),
+                                  'guard' => $callbackSchema,
+                              ])
+        );
+        // We cannot inline $stateSchema in its children, so we initialize it later
+        $nestedStateSchema = new Type('array');
+        $stateSchema = Expect::structure([
+                                             'label' => Expect::string(),
+                                             'parallel' => Expect::bool(),
+                                             'initial' => Expect::string(),
+                                             'transitions' => Expect::listOf($transitionSchema),
+                                             'children' => $nestedStateSchema,
+                                             'onEntry' => $callbackSchema,
+                                             'onExit' => $callbackSchema,
+                                             'action' => $callbackSchema,
+                                         ]);
+        $nestedStateSchema->items($stateSchema);
+        $schema = Expect::arrayOf($stateSchema);
+        $processor = new Processor;
+        try {
+            $processor->process($schema, $this->stateGraph);
+        } catch (ValidationException $e) {
+            throw new InvalidSchemaException(array_map(fn(Message $m) => $m->toString(), $e->getMessageObjects()));
+        }
+    }
+
+    private function processDefinitions(array $definitions, array &$out = []): void
+    {
+        $this->nestingLevel++;
+        foreach ($definitions as $name => $definition) {
+            $this->processDefinition($name, $definition, $out);
+        }
+        $this->nestingLevel--;
     }
 
     private function processDefinition(string $name, array $definition, array &$out = []): void
@@ -133,23 +183,6 @@ class ArrayLoader implements LoaderInterface
         }
 
         return $state;
-    }
-
-    private function processDefinitions(array $definitions, array &$out = []): void
-    {
-        $this->nestingLevel++;
-        foreach ($definitions as $name => $definition) {
-            $this->processDefinition($name, $definition, $out);
-        }
-        $this->nestingLevel--;
-    }
-
-    /**
-     * @throws InvalidSchemaException
-     */
-    public function transitions(): TransitionProviderInterface
-    {
-        return $this->transitionProcessor->create($this->definitions(), $this->serviceLocator);
     }
 
     /**
