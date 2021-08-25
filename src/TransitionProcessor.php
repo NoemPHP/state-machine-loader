@@ -58,10 +58,7 @@ class TransitionProcessor implements ProcessorInterface
     ): TransitionProviderInterface {
         $transitionProvider = new TransitionProvider($stateDefinitions);
         foreach ($this->rawTransitions as $rawTransition) {
-            $guard = is_string($rawTransition['guard']) ? $this->generateGuardParameter(
-                $rawTransition['guard'],
-                $serviceLocator
-            ) : $this->assertValidGuard($rawTransition['guard'], get_class($rawTransition['guard']));
+            $guard = $this->generateGuardParameter($rawTransition['guard'], $serviceLocator);
             $transitionProvider->registerTransition(
                 $rawTransition['source'],
                 $rawTransition['target'],
@@ -76,12 +73,17 @@ class TransitionProcessor implements ProcessorInterface
      * @throws Exception\InvalidSchemaException
      */
     private function generateGuardParameter(
-        string|null $definition,
+        string|callable|null $definition,
         ContainerInterface $serviceLocator
     ): string|callable|null {
         if (!$definition) {
             return null;
         }
+        if (is_callable($definition)) {
+            $handle = is_string($definition) ? $definition : get_class($definition);
+            return $this->assertValidGuard($definition, $this->generateCallableHandle($handle));
+        }
+
         if ($this->isService($definition)) {
             return $this->assertValidGuard($this->resolveService($definition, $serviceLocator), $definition);
         }
@@ -106,5 +108,14 @@ class TransitionProcessor implements ProcessorInterface
                 $defined => "Guards callbacks must return boolean",
             ]
         );
+    }
+
+    private function generateCallableHandle(callable $c): string
+    {
+        return match (true) {
+            is_string($c) => $c,
+            is_array($c) => get_class($c[0]) . '::' . $c[1],
+            default => get_class($c),
+        };
     }
 }

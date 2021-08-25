@@ -74,6 +74,7 @@ class EventProcessor implements ProcessorInterface
             $parameter = ParameterDeriver::getParameterType($handler);
         } catch (\InvalidArgumentException $e) {
             [$state, $serviceName] = $rawDefinition;
+            $serviceName = is_string($serviceName) ? $serviceName : get_class($serviceName);
             throw new InvalidSchemaException([$state => "Invalid event handler '{$serviceName}'"], $e);
         }
 
