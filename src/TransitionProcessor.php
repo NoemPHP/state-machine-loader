@@ -110,7 +110,7 @@ class TransitionProcessor implements ProcessorInterface
         );
     }
 
-    private function generateCallableHandle(callable $c): string
+    private function generateCallableHandle(string|callable|array $c): string
     {
         return match (true) {
             is_string($c) => $c,
