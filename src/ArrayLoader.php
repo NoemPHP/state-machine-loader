@@ -99,7 +99,7 @@ class ArrayLoader implements LoaderInterface
                                          ]);
         $nestedStateSchema->items($stateSchema);
         $schema = Expect::arrayOf($stateSchema);
-        $processor = new Processor;
+        $processor = new Processor();
         try {
             $processor->process($schema, $this->stateGraph);
         } catch (ValidationException $e) {
