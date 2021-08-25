@@ -58,7 +58,10 @@ class TransitionProcessor implements ProcessorInterface
     ): TransitionProviderInterface {
         $transitionProvider = new TransitionProvider($stateDefinitions);
         foreach ($this->rawTransitions as $rawTransition) {
-            $guard = $this->generateGuardParameter($rawTransition['guard'], $serviceLocator);
+            $guard = is_string($rawTransition['guard']) ? $this->generateGuardParameter(
+                $rawTransition['guard'],
+                $serviceLocator
+            ) : $this->assertValidGuard($rawTransition['guard'], get_class($rawTransition['guard']));
             $transitionProvider->registerTransition(
                 $rawTransition['source'],
                 $rawTransition['target'],
