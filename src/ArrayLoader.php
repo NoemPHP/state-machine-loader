@@ -81,22 +81,22 @@ class ArrayLoader implements LoaderInterface
         $transitionSchema = Expect::anyOf(
             Expect::string(),
             Expect::structure([
-                                  'target' => Expect::string()->required(),
-                                  'guard' => $callbackSchema,
-                              ])
+                'target' => Expect::string()->required(),
+                'guard' => $callbackSchema,
+            ])
         );
         // We cannot inline $stateSchema in its children, so we initialize it later
         $nestedStateSchema = new Type('array');
         $stateSchema = Expect::structure([
-                                             'label' => Expect::string(),
-                                             'parallel' => Expect::bool(),
-                                             'initial' => Expect::string(),
-                                             'transitions' => Expect::listOf($transitionSchema),
-                                             'children' => $nestedStateSchema,
-                                             'onEntry' => $callbackSchema,
-                                             'onExit' => $callbackSchema,
-                                             'action' => $callbackSchema,
-                                         ]);
+            'label' => Expect::string(),
+            'parallel' => Expect::bool(),
+            'initial' => Expect::string(),
+            'transitions' => Expect::listOf($transitionSchema),
+            'children' => $nestedStateSchema,
+            'onEntry' => $callbackSchema,
+            'onExit' => $callbackSchema,
+            'action' => $callbackSchema,
+        ]);
         $nestedStateSchema->items($stateSchema);
         $schema = Expect::arrayOf($stateSchema);
         $processor = new Processor();
@@ -116,8 +116,14 @@ class ArrayLoader implements LoaderInterface
         $this->nestingLevel--;
     }
 
+    /**
+     * @throws InvalidSchemaException
+     */
     private function processDefinition(string $name, array $definition, array &$out = []): void
     {
+        if (isset($this->stateMap[$name])) {
+            throw new InvalidSchemaException([$name => 'Duplicate state name detected']);
+        }
         $state = $this->createStateInstance($name, $definition);
         $this->stateMap[$name] = $state;
         $out[$name] = $state;
