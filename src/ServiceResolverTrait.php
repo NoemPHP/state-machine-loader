@@ -9,7 +9,6 @@ use Psr\Container\ContainerInterface;
 
 trait ServiceResolverTrait
 {
-
     /**
      * @throws InvalidSchemaException
      */

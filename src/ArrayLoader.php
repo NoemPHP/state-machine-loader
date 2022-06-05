@@ -23,7 +23,6 @@ use Psr\Container\ContainerInterface;
 
 class ArrayLoader implements LoaderInterface
 {
-
     /**
      * @var StateInterface[]
      */

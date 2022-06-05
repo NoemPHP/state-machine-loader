@@ -8,6 +8,4 @@ use Noem\State\Exception\StateMachineExceptionInterface;
 
 abstract class LoaderException extends \Exception implements StateMachineExceptionInterface
 {
-
-
 }

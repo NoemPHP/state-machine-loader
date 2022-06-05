@@ -8,7 +8,6 @@ use Noem\State\Transition\TransitionProviderInterface;
 
 interface LoaderInterface
 {
-
     public function definitions(): StateDefinitions;
 
     public function transitions(): TransitionProviderInterface;

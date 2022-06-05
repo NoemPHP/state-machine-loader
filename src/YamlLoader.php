@@ -9,7 +9,6 @@ use Symfony\Component\Yaml\Yaml;
 
 class YamlLoader extends ArrayLoader
 {
-
     public function __construct(
         string $yaml,
         ?ContainerInterface $serviceLocator = null
