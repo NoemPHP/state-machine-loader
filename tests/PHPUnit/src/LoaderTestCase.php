@@ -31,6 +31,11 @@ abstract class LoaderTestCase extends MockeryTestCase
 
     ): StateMachine {
         $serviceLocator = \Mockery::mock(ContainerInterface::class);
+        $serviceLocator->shouldReceive('has')->andReturnUsing(
+            function ($id) use ($serviceConfig) {
+                return isset($serviceConfig[$id]);
+            }
+        );
         $serviceLocator->shouldReceive('get')->andReturnUsing(
             function ($id) use ($serviceConfig) {
                 return $serviceConfig[$id];
@@ -54,6 +59,11 @@ abstract class LoaderTestCase extends MockeryTestCase
     protected function configureLoader(string|array $data, array $serviceConfig = []): LoaderInterface
     {
         $serviceLocator = \Mockery::mock(ContainerInterface::class);
+        $serviceLocator->shouldReceive('has')->andReturnUsing(
+            function ($id) use ($serviceConfig) {
+                return isset($serviceConfig[$id]);
+            }
+        );
         $serviceLocator->shouldReceive('get')->andReturnUsing(
             function ($id) use ($serviceConfig) {
                 return $serviceConfig[$id];
