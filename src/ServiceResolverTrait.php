@@ -19,7 +19,14 @@ trait ServiceResolverTrait
             return $serviceDefinition;
         }
         if ($this->isService($serviceDefinition)) {
-            return $serviceLocator->get(substr($serviceDefinition, 1));
+            $serviceName = substr($serviceDefinition, 1);
+            if (!$serviceLocator->has($serviceName)) {
+                throw new InvalidSchemaException([
+                    $serviceDefinition => "Service '{$serviceName}' not found in container",
+                ]);
+            }
+
+            return $serviceLocator->get($serviceName);
         }
         throw new InvalidSchemaException([$serviceDefinition => "Could not resolve event handler"]);
     }
