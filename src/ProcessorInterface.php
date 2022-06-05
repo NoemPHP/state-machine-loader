@@ -10,7 +10,6 @@ use Psr\Container\ContainerInterface;
  */
 interface ProcessorInterface
 {
-
     public function process(string $name, array $data, int $depth): void;
 
     /**

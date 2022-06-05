@@ -9,11 +9,9 @@ use Psr\Container\NotFoundExceptionInterface;
 
 class FallbackContainer implements ContainerInterface
 {
-
     public function get($id)
     {
         throw new class ("Empty fallback Container used") extends \Exception implements NotFoundExceptionInterface {
-
         };
     }
 
