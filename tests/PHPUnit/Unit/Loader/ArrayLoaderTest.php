@@ -24,6 +24,7 @@ class ArrayLoaderTest extends AbstractLoaderTest
             $this->expectException(InvalidSchemaException::class);
         }
         $serviceLocator = \Mockery::mock(ContainerInterface::class);
+        $serviceLocator->allows('has');
         $serviceLocator->shouldReceive('get')->andReturnUsing(
             function ($id) use ($services) {
                 return $services[$id];

@@ -72,6 +72,7 @@ abstract class AbstractLoaderTest extends MockeryTestCase
                     'onEnterFoo handler does not exist!'
                 );
             },
+            true
         ];
         $array = [
             'foo' => ['label' => ''],

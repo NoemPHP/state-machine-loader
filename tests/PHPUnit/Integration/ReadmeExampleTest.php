@@ -72,10 +72,9 @@ class ReadmeExampleTest extends StateMachineTestCase
         
         $expected = [
             'substate2',
+            'baz',
             'foo',
             'bar',
-            'baz',
-
         ];
         $this->assertSame($expected, $payload->result);
 
