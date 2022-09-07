@@ -14,6 +14,19 @@
                 "initial": {
                     "type": "string"
                 },
+                "context": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "type": "array"
+                        }
+                    ]
+                },
                 "transitions": {
                     "type": "array",
                     "items": {

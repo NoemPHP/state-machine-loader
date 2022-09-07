@@ -48,12 +48,15 @@ class ReadmeExampleTest extends StateMachineTestCase
             'guardSubstate3' => function (\stdClass $trigger): bool {
                 return $trigger->moveTo === 'substate3';
             },
+            'helloWorldService' => ['hello' => 'world'],
         ];
         $loader = new YamlLoader($this->yaml, $this->createContainer($services));
         $definitions = $loader->definitions();
         $m = new StateMachine(
             $loader->transitions(),
-            new InMemoryStateStorage($definitions->get('off'))
+            new InMemoryStateStorage($definitions->get('off')),
+            null,
+            $loader->context()
         );
 
         $m->attach($loader->observer());
@@ -69,7 +72,7 @@ class ReadmeExampleTest extends StateMachineTestCase
 
         $payload = (object)['result' => []];
         $m->action($payload);
-        
+
         $expected = [
             'substate2',
             'baz',
@@ -89,6 +92,14 @@ class ReadmeExampleTest extends StateMachineTestCase
 
         $m->trigger(new \Exception("some_error"));
         $this->assertTrue($m->isInState('error'));
+
+        foreach (['on','error'] as $contextStateName) {
+            $state = $definitions->get($contextStateName);
+            $context = $m->context($state);
+            $this->assertTrue(isset($context['hello']));
+            $this->assertSame($context['hello'], 'world');
+        }
+
     }
 
     private function createContainer(array $services): ContainerInterface

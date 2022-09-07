@@ -11,6 +11,7 @@ use Nette\Schema\Expect;
 use Nette\Schema\Message;
 use Nette\Schema\Processor;
 use Nette\Schema\ValidationException;
+use Noem\State\Context\ContextProviderInterface;
 use Noem\State\Loader\Exception\InvalidSchemaException;
 use Noem\State\Observer\StateMachineObserver;
 use Noem\State\State\HierarchicalState;
@@ -23,6 +24,7 @@ use Psr\Container\ContainerInterface;
 
 class ArrayLoader implements LoaderInterface
 {
+
     /**
      * @var StateInterface[]
      */
@@ -37,6 +39,8 @@ class ArrayLoader implements LoaderInterface
     private ?StateDefinitions $definitions = null;
 
     private ContainerInterface $serviceLocator;
+
+    private ContextProcessor $contextProcessor;
 
     public function __construct(
         private array $stateGraph,
@@ -56,12 +60,21 @@ class ArrayLoader implements LoaderInterface
     /**
      * @throws InvalidSchemaException
      */
+    public function context(): ContextProviderInterface
+    {
+        return $this->contextProcessor->create($this->definitions(), $this->serviceLocator);
+    }
+
+    /**
+     * @throws InvalidSchemaException
+     */
     public function definitions(): StateDefinitions
     {
         if (!$this->definitions) {
             $this->assertValidGraph();
             $this->eventProcessor = new EventProcessor();
             $this->transitionProcessor = new TransitionProcessor();
+            $this->contextProcessor = new ContextProcessor();
 
             $this->processDefinitions($this->stateGraph);
             $this->definitions = new StateDefinitions($this->stateMap);
@@ -84,6 +97,10 @@ class ArrayLoader implements LoaderInterface
                 'guard' => $callbackSchema,
             ])
         );
+        $contextSchema = Expect::anyOf(
+            Expect::string(),
+            Expect::array()
+        );
         // We cannot inline $stateSchema in its children, so we initialize it later
         $nestedStateSchema = new Type('array');
         $stateSchema = Expect::structure([
@@ -95,6 +112,7 @@ class ArrayLoader implements LoaderInterface
             'onEntry' => $callbackSchema,
             'onExit' => $callbackSchema,
             'action' => $callbackSchema,
+            'context' => $contextSchema,
         ]);
         $nestedStateSchema->items($stateSchema);
         $schema = Expect::arrayOf($stateSchema);
@@ -129,6 +147,7 @@ class ArrayLoader implements LoaderInterface
 
         $this->eventProcessor->process($name, $definition, $this->nestingLevel);
         $this->transitionProcessor->process($name, $definition, $this->nestingLevel);
+        $this->contextProcessor->process($name, $definition, $this->nestingLevel);
     }
 
     private function createStateInstance(string $name, array $definition): StateInterface

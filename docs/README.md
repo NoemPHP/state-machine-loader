@@ -19,14 +19,15 @@ Below is a description of all the relevant entities:
 
 ### State
 
-|Key|Type|Required|Example|Comment  |
-|---|---|---|---|---|
-|transitions|array<[Transition](#transition)> | - | `["target-state"]`| Define which states can be reached from this state |
-|children|`object`| - |`{"subState": {}}`| `Dictionary<string,State>`. Recursion |
-|parallel|`boolean`| - |`true`| Flag this state as parallel.<br>All of its children will be active at the same time  |
-|initial|`string`| - | `"subState"` | Only used for hierarchical states.<br>Determines which child state is initially active.<br> Defaults to the first child if omitted|
-|onEntry|[Callback](#callback)  | - | `"my_php_function"`<br>`"@myContainerEntry"` | An action to run when this state is entered. |
-|onExit|[Callback](#callback)  | - | `"my_php_function"`<br>`"@myContainerEntry"` | An action to run when this state is exited.  |
+| Key         | Type                             | Required | Example                                        | Comment                                                                                                                            |
+|-------------|----------------------------------|---------|------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| transitions | array<[Transition](#transition)> | -       | `["target-state"]`                             | Define which states can be reached from this state                                                                                 |
+| children    | `object`                         | -       | `{"subState": {}}`                             | `Dictionary<string,State>`. Recursion                                                                                              |
+| parallel    | `boolean`                        | -       | `true`                                         | Flag this state as parallel.<br>All of its children will be active at the same time                                                |
+| initial     | `string`                         | -       | `"subState"`                                   | Only used for hierarchical states.<br>Determines which child state is initially active.<br> Defaults to the first child if omitted |
+| onEntry     | [Callback](#callback)            | -       | `"my_php_function"`<br>`"@myContainerEntry"`   | An action to run when this state is entered.                                                                                       |
+| onExit      | [Callback](#callback)            | -       | `"my_php_function"`<br>`"@myContainerEntry"`   | An action to run when this state is exited.                                                                                        |
+| context     | `string`,`object`                | - | `{"hello": "world"}}`<br>`"@myContainerEntry"` | Initial context data.                                                                                                              |
 
 ### Transition
 
@@ -63,6 +64,8 @@ off:
 
 on:
     parallel: true
+    context:
+        hello: "world"
     onEntry: '@onBooted'
     children:
         foo:
@@ -93,6 +96,7 @@ on:
 
 error:
     onEntry: '@onException'
+    context: '@helloWorldService'
     transitions:
         - off
 ```
