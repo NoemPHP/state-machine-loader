@@ -15,7 +15,6 @@ use Psr\Container\ContainerInterface;
  */
 class ContextProcessor implements ProcessorInterface
 {
-
     private array $scalarData = [];
 
     private array $serviceAliases = [];

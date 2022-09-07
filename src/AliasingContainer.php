@@ -8,7 +8,6 @@ use Psr\Container\ContainerInterface;
 
 class AliasingContainer implements ContainerInterface
 {
-
     public function __construct(private array $map, private ContainerInterface $inner)
     {
     }

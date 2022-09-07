@@ -8,7 +8,6 @@ use Psr\Container\ContainerInterface;
 
 class ContainerLayer implements ContainerInterface
 {
-
     public function __construct(private array $data, private ContainerInterface $inner)
     {
     }

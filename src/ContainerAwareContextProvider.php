@@ -12,7 +12,6 @@ use Psr\Container\ContainerInterface;
 
 class ContainerAwareContextProvider implements ContextProviderInterface
 {
-
     public function __construct(private ContainerInterface $container)
     {
     }
