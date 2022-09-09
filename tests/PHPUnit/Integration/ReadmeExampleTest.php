@@ -17,8 +17,7 @@ use Psr\Container\NotFoundExceptionInterface;
 
 class ReadmeExampleTest extends StateMachineTestCase
 {
-
-    private const README_LOCATION = __DIR__.'/../../../docs/README.md';
+    private const README_LOCATION = __DIR__ . '/../../../docs/README.md';
 
     private string $yaml;
 
@@ -48,6 +47,9 @@ class ReadmeExampleTest extends StateMachineTestCase
             'guardSubstate3' => function (\stdClass $trigger): bool {
                 return $trigger->moveTo === 'substate3';
             },
+            'guardBar_1_2' => function (\stdClass $trigger): bool {
+                return $trigger->moveTo === 'bar_1_2';
+            },
             'helloWorldService' => ['hello' => 'world'],
         ];
         $loader = new YamlLoader($this->yaml, $this->createContainer($services));
@@ -74,12 +76,18 @@ class ReadmeExampleTest extends StateMachineTestCase
         $m->action($payload);
 
         $expected = [
+            'bar_1',
+            'bar_2',
             'substate2',
-            'baz',
             'foo',
             'bar',
+            'baz',
         ];
-        $this->assertSame($expected, $payload->result);
+        $this->assertSame(
+            $expected,
+            $payload->result,
+            "Actions should have been carried out from the deepest child upwards"
+        );
 
         $m->trigger((object)['moveTo' => '__somewhere']);
         $this->assertNotTrue(
@@ -87,8 +95,21 @@ class ReadmeExampleTest extends StateMachineTestCase
             "Transition not enabled by mismatching trigger payload"
         );
 
+        /**
+         * Check if the machine can take note of the state change in the nested
+         * parallel state
+         */
         $m->trigger((object)['moveTo' => 'substate3']);
         $this->assertTrue($m->isInState('substate3'));
+
+        /**
+         * Check if the behaviour is still consistent when using a different
+         * nested parallel state
+         */
+        $this->assertTrue($m->isInState('bar_1_1'));
+        $m->trigger((object)['moveTo' => 'bar_1_2']);
+        $this->assertTrue($m->isInState('bar_1_2'));
+
 
         $m->trigger(new \Exception("some_error"));
         $this->assertTrue($m->isInState('error'));
@@ -99,13 +120,11 @@ class ReadmeExampleTest extends StateMachineTestCase
             $this->assertTrue(isset($context['hello']));
             $this->assertSame($context['hello'], 'world');
         }
-
     }
 
     private function createContainer(array $services): ContainerInterface
     {
-        return new class($services) implements ContainerInterface {
-
+        return new class ($services) implements ContainerInterface {
             public function __construct(private array $services)
             {
             }
@@ -113,9 +132,9 @@ class ReadmeExampleTest extends StateMachineTestCase
             public function get($id)
             {
                 if (!$this->has($id)) {
-                    throw new class("Service '{$id}' not found") extends \Exception implements
-                        NotFoundExceptionInterface {
-
+                    throw new class ("Service '{$id}' not found") extends \Exception implements
+                        NotFoundExceptionInterface
+                    {
                     };
                 }
 

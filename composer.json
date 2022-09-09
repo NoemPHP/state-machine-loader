@@ -1,41 +1,45 @@
 {
-  "name": "noem/state-machine-loader",
-  "description": "Constructs usable state machine instances from various data sources (Array, JSON,YAML)",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "biont",
-      "email": "email@example.com"
+    "name": "noem/state-machine-loader",
+    "description": "Constructs usable state machine instances from various data sources (Array, JSON,YAML)",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "biont",
+            "email": "email@example.com"
+        }
+    ],
+    "require": {
+        "justinrainbow/json-schema": "^5.2",
+        "nette/schema": "^1.2",
+        "noem/state-machine-interface": "dev-master",
+        "psr/container": "^1.0 || ^2.0",
+        "symfony/yaml": "^5.3"
+    },
+    "require-dev": {
+        "noem/state-machine": "dev-master",
+        "phpunit/phpunit": "^9.1",
+        "mockery/mockery": "^1.4",
+        "squizlabs/php_codesniffer": "^3.6",
+        "noem/composer-file-embed": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "Noem\\State\\Loader\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Noem\\State\\Loader\\Tests\\": "tests/PHPUnit/src/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "noem/composer-file-embed": true
+        },
+        "preferred-install": {
+            "noem/*": "source",
+            "*": "dist"
+        }
     }
-  ],
-  "require": {
-    "justinrainbow/json-schema": "^5.2",
-    "nette/schema": "^1.2",
-    "noem/state-machine-interface": "dev-master",
-    "psr/container": "^1.0 || ^2.0",
-    "symfony/yaml": "^5.3"
-  },
-  "require-dev": {
-    "noem/state-machine": "dev-master",
-    "phpunit/phpunit": "^9.1",
-    "mockery/mockery": "^1.4",
-    "squizlabs/php_codesniffer": "^3.6",
-    "noem/composer-file-embed": "dev-master"
-  },
-  "autoload": {
-    "psr-4": {
-      "Noem\\State\\Loader\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Noem\\State\\Loader\\Tests\\": "tests/PHPUnit/src/"
-    }
-  },
-  "config": {
-    "sort-packages": true,
-    "allow-plugins": {
-      "noem/composer-file-embed": true
-    }
-  }
 }

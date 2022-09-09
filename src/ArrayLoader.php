@@ -12,18 +12,22 @@ use Nette\Schema\Message;
 use Nette\Schema\Processor;
 use Nette\Schema\ValidationException;
 use Noem\State\Context\ContextProviderInterface;
+use Noem\State\InMemoryStateStorage;
 use Noem\State\Loader\Exception\InvalidSchemaException;
+use Noem\State\NestedStateInterface;
 use Noem\State\Observer\StateMachineObserver;
 use Noem\State\State\HierarchicalState;
 use Noem\State\State\ParallelState;
 use Noem\State\State\SimpleState;
 use Noem\State\State\StateDefinitions;
 use Noem\State\StateInterface;
+use Noem\State\StateMachine;
 use Noem\State\Transition\TransitionProviderInterface;
 use Psr\Container\ContainerInterface;
 
 class ArrayLoader implements LoaderInterface
 {
+
     /**
      * @var StateInterface[]
      */
@@ -46,6 +50,23 @@ class ArrayLoader implements LoaderInterface
         ?ContainerInterface $serviceLocator = null
     ) {
         $this->serviceLocator = $serviceLocator ?? new FallbackContainer();
+    }
+
+    public function createMachine(string $initialState = null): StateMachine
+    {
+        $definitions = $this->definitions(); // A flat list of all defined states
+        $initialState = $initialState
+            ? $definitions->get($initialState)
+            : $definitions->initial();
+        $stateMachine = new StateMachine(
+            $this->transitions(), // Our generated TransitionProvider
+            new InMemoryStateStorage($initialState),
+            null,
+            $this->context()
+        );
+        $stateMachine->attach($this->observer());
+
+        return $stateMachine;
     }
 
     /**
@@ -174,7 +195,7 @@ class ArrayLoader implements LoaderInterface
         $this->processDefinitions($childDefinitions, $children);
         $state = new ParallelState($name, null, ...$children);
         foreach ($children as $child) {
-            if ($child instanceof HierarchicalState) {
+            if ($child instanceof NestedStateInterface) {
                 $child->setParent($state);
             }
         }

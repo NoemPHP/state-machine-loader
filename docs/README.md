@@ -73,8 +73,21 @@ on:
 
         bar:
             action: '@sayMyName'
+            parallel: true
+            children:
+                bar_1:
+                    action: '@sayMyName'
+                    children:
+                        bar_1_1:
+                            transitions:
+                            - target: 'bar_1_2'
+                              guard: '@guardBar_1_2'
+                        bar_1_2: {}
+                bar_2:
+                    action: '@sayMyName'
+
         baz:
-            initial: 'substate2'
+            initial: 'substate2' # if not specified, it would use the first child, 'substate1'
             action: '@sayMyName'
             children:
                 substate1:
