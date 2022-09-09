@@ -44,12 +44,9 @@ class ReadmeExampleTest extends StateMachineTestCase
             'sayMyName' => function (\stdClass $payload, StateInterface $state) {
                 $payload->result[] = (string)$state;
             },
-            'guardSubstate3' => function (\stdClass $trigger): bool {
-                return $trigger->moveTo === 'substate3';
-            },
-            'guardBar_1_2' => function (\stdClass $trigger): bool {
-                return $trigger->moveTo === 'bar_1_2';
-            },
+            'guardSubstate3' => fn(\stdClass $trigger): bool => $trigger->moveTo === 'substate3',
+            'guardBar_1_1' => fn(\stdClass $trigger): bool => $trigger->moveTo === 'bar_1_1',
+            'guardBar_1_2' => fn(\stdClass $trigger): bool => $trigger->moveTo === 'bar_1_2',
             'helloWorldService' => ['hello' => 'world'],
         ];
         $loader = new YamlLoader($this->yaml, $this->createContainer($services));
@@ -110,6 +107,11 @@ class ReadmeExampleTest extends StateMachineTestCase
         $m->trigger((object)['moveTo' => 'bar_1_2']);
         $this->assertTrue($m->isInState('bar_1_2'));
 
+        /**
+         * Moving back should also work, right?
+         */
+        $m->trigger((object)['moveTo' => 'bar_1_1']);
+        $this->assertTrue($m->isInState('bar_1_1'));
 
         $m->trigger(new \Exception("some_error"));
         $this->assertTrue($m->isInState('error'));
