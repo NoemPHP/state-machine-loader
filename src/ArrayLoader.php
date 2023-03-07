@@ -217,7 +217,7 @@ class ArrayLoader implements LoaderInterface
 
         $state = new HierarchicalState($name, null, ...$children);
         foreach ($children as $child) {
-            if ($child instanceof HierarchicalState) {
+            if ($child instanceof NestedStateInterface) {
                 $child->setParent($state);
             }
         }
