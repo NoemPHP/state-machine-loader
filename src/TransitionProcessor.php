@@ -60,7 +60,7 @@ class TransitionProcessor implements ProcessorInterface
         $transitionProvider = new TransitionProvider($stateDefinitions);
         foreach ($this->rawTransitions as $rawTransition) {
             $guardDefinition = $rawTransition['guard'];
-            if (is_array($guardDefinition)) {
+            if (is_array($guardDefinition) && !is_callable($guardDefinition)) {
                 $guard = $this->createAggregateGuard($guardDefinition, $serviceLocator);
             } else {
                 $guard = $this->generateGuardParameter($guardDefinition, $serviceLocator);
