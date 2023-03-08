@@ -15,15 +15,19 @@ use Psr\Container\ContainerInterface;
  */
 class EventProcessor implements ProcessorInterface
 {
+
     use ServiceResolverTrait;
 
-    private array $events = [];
+    private array $eventByState = [];
 
     public function process(string $name, array $data, int $depth): void
     {
         foreach (['onEntry', 'onExit', 'action'] as $key) {
             if (isset($data[$key])) {
-                $this->events[$key][] = [$name, $data[$key]];
+                if (!isset($this->eventByState[$name][$key])) {
+                    $this->eventByState[$name][$key] = [];
+                }
+                $this->eventByState[$name][$key] += (array)$data[$key];
             }
         }
     }
@@ -35,35 +39,42 @@ class EventProcessor implements ProcessorInterface
     {
         $em = new EventManager();
 
-        isset($this->events['onEntry'])
-        and array_walk(
-            $this->events['onEntry'],
-            fn($h) => $em->addEnterStateHandler(
-                $stateDefinitions->get($h[0]),
-                $this->resolveService($h[1], $serviceLocator)
-            )
-        );
-
-        isset($this->events['onExit'])
-        and array_walk(
-            $this->events['onExit'],
-            fn($h) => $em->addExitStateHandler(
-                $stateDefinitions->get($h[0]),
-                $this->resolveService($h[1], $serviceLocator)
-            )
-        );
-
-        isset($this->events['action'])
-        and array_walk(
-            $this->events['action'],
-            fn($h) => $em->addActionHandler(
-                $stateDefinitions->get($h[0]),
-                $this->assertValidAction(
-                    $this->resolveService($h[1], $serviceLocator),
-                    $h,
-                )
-            )
-        );
+        foreach ($this->eventByState as $state => $eventsByType) {
+            foreach ($eventsByType as $type => $events) {
+                switch ($type) {
+                    case 'onEntry':
+                        array_walk(
+                            $events,
+                            fn($e) => $em->addEnterStateHandler(
+                                $stateDefinitions->get($state),
+                                $this->resolveService($e, $serviceLocator)
+                            )
+                        );
+                        break;
+                    case 'onExit':
+                        array_walk(
+                            $events,
+                            fn($e) => $em->addExitStateHandler(
+                                $stateDefinitions->get($state),
+                                $this->resolveService($e, $serviceLocator)
+                            )
+                        );
+                        break;
+                    case 'action':
+                        array_walk(
+                            $events,
+                            fn($e) => $em->addActionHandler(
+                                $stateDefinitions->get($state),
+                                $this->assertValidAction(
+                                    $this->resolveService($e, $serviceLocator),
+                                    [$state, $e]
+                                )
+                            )
+                        );
+                        break;
+                }
+            }
+        }
 
         return $em;
     }
@@ -74,7 +85,9 @@ class EventProcessor implements ProcessorInterface
             $parameter = ParameterDeriver::getParameterType($handler);
         } catch (\InvalidArgumentException $e) {
             [$state, $serviceName] = $rawDefinition;
-            $serviceName = is_string($serviceName) ? $serviceName : get_class($serviceName);
+            $serviceName = is_string($serviceName)
+                ? $serviceName
+                : get_class($serviceName);
             throw new InvalidSchemaException([$state => "Invalid event handler '{$serviceName}'"], $e);
         }
 

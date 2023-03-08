@@ -114,7 +114,9 @@ on:
             guard: Throwable
 
 error:
-    onEntry: '@onException'
+    onEntry: 
+      - '@onException'
+      - '@anotherErrorHandler'
     context: '@helloWorldService'
     transitions:
         - off

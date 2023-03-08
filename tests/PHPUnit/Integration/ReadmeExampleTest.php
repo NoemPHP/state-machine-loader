@@ -41,6 +41,8 @@ class ReadmeExampleTest extends StateMachineTestCase
             },
             'onException' => function () {
             },
+            'anotherErrorHandler' => function () {
+            },
             'sayMyName' => function (\stdClass $payload, StateInterface $state) {
                 $payload->result[] = (string)$state;
             },
