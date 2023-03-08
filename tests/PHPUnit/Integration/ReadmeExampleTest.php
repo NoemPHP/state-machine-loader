@@ -45,6 +45,7 @@ class ReadmeExampleTest extends StateMachineTestCase
                 $payload->result[] = (string)$state;
             },
             'guardSubstate3' => fn(\stdClass $trigger): bool => $trigger->moveTo === 'substate3',
+            'someOtherGuard' => fn(\stdClass $trigger): bool => false,
             'guardBar_1_1' => fn(\stdClass $trigger): bool => $trigger->moveTo === 'bar_1_1',
             'guardBar_1_2' => fn(\stdClass $trigger): bool => $trigger->moveTo === 'bar_1_2',
             'helloWorldService' => ['hello' => 'world'],

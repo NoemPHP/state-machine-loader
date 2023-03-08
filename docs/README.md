@@ -36,10 +36,10 @@ transition that is not enabled by any event or guard and thus will be immediatel
 is triggered by any event. This can be useful for chaining transitions, eg. when you are more interested in the series
 of enEntry/onExit events than the intermediate states. The full definition of a transition is an `object` though:
 
-|Key|Type|Required|Example|Comment  |
-|---|---|---|---|---|
-|target|string| * | `my-state` |   |
-|guard|string| - |`"MyEventClassName"`|   |
+|Key| Type             |Required|Example|Comment  |
+|---|------------------|---|---|---|
+|target| string           | * | `my-state` |   |
+|guard| `string`,`array` | - |`"MyEventClassName"`|   |
 
 ### Callback
 
@@ -100,7 +100,10 @@ on:
                     action: '@sayMyName'
                     transitions:
                         -   target: 'substate3'
-                            guard: '@guardSubstate3'
+                            guard: 
+                            # Multiple guards for one transition are possible. Any of them can allow the transition
+                              - '@someOtherGuard'
+                              - '@guardSubstate3'
                 substate3:
                     action: '@sayMyName'
 

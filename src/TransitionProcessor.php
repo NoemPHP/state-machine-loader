@@ -16,6 +16,7 @@ use Psr\Container\ContainerInterface;
  */
 class TransitionProcessor implements ProcessorInterface
 {
+
     use ServiceResolverTrait;
 
     private array $rawTransitions = [];
@@ -58,7 +59,12 @@ class TransitionProcessor implements ProcessorInterface
     ): TransitionProviderInterface {
         $transitionProvider = new TransitionProvider($stateDefinitions);
         foreach ($this->rawTransitions as $rawTransition) {
-            $guard = $this->generateGuardParameter($rawTransition['guard'], $serviceLocator);
+            $guardDefinition = $rawTransition['guard'];
+            if (is_array($guardDefinition)) {
+                $guard = $this->createAggregateGuard($guardDefinition, $serviceLocator);
+            } else {
+                $guard = $this->generateGuardParameter($guardDefinition, $serviceLocator);
+            }
             $transitionProvider->registerTransition(
                 $rawTransition['source'],
                 $rawTransition['target'],
@@ -80,7 +86,10 @@ class TransitionProcessor implements ProcessorInterface
             return null;
         }
         if (is_callable($definition)) {
-            $handle = is_string($definition) ? $definition : get_class($definition);
+            $handle = is_string($definition)
+                ? $definition
+                : get_class($definition);
+
             return $this->assertValidGuard($definition, $this->generateCallableHandle($handle));
         }
 
@@ -92,6 +101,25 @@ class TransitionProcessor implements ProcessorInterface
             return $definition;
         }
         throw new InvalidSchemaException();
+    }
+
+    private function createAggregateGuard(array $guardDefinitions, ContainerInterface $serviceLocator)
+    {
+        $guards = array_map(fn($d) => $this->generateGuardParameter($d, $serviceLocator), $guardDefinitions);
+
+        return function (object $trigger) use ($guards): bool {
+            $args = func_get_args();
+            foreach ($guards as $guard) {
+                if (!is_callable($guard)) {
+                    return $trigger instanceof $guard;
+                }
+                if ($guard(...$args)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
     }
 
     /**
@@ -114,7 +142,7 @@ class TransitionProcessor implements ProcessorInterface
     {
         return match (true) {
             is_string($c) => $c,
-            is_array($c) => get_class($c[0]) . '::' . $c[1],
+            is_array($c) => get_class($c[0]).'::'.$c[1],
             default => get_class($c),
         };
     }
