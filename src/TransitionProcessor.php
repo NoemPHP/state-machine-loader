@@ -16,7 +16,6 @@ use Psr\Container\ContainerInterface;
  */
 class TransitionProcessor implements ProcessorInterface
 {
-
     use ServiceResolverTrait;
 
     private array $rawTransitions = [];
@@ -142,7 +141,7 @@ class TransitionProcessor implements ProcessorInterface
     {
         return match (true) {
             is_string($c) => $c,
-            is_array($c) => get_class($c[0]).'::'.$c[1],
+            is_array($c) => get_class($c[0]) . '::' . $c[1],
             default => get_class($c),
         };
     }
