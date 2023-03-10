@@ -91,7 +91,8 @@ on:
 
         baz:
             initial: 'substate2' # if not specified, it would use the first child, 'substate1'
-            action: '@sayMyName'
+            action: 
+              - '@sayMyName'
             children:
                 substate1:
                     action: '@sayMyName'
