@@ -107,7 +107,7 @@ class ArrayLoader implements LoaderInterface
      */
     private function assertValidGraph()
     {
-        $nestedCallbackSchema=Expect::anyOf(Expect::string(), Expect::type('callable'));
+        $nestedCallbackSchema = Expect::anyOf(Expect::string(), Expect::type('callable'));
         $callbackSchema = Expect::anyOf(Expect::listOf($nestedCallbackSchema), $nestedCallbackSchema);
         $transitionSchema = Expect::anyOf(
             Expect::string(),
