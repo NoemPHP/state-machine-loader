@@ -17,7 +17,8 @@ use Psr\Container\NotFoundExceptionInterface;
 
 class ReadmeExampleTest extends StateMachineTestCase
 {
-    private const README_LOCATION = __DIR__ . '/../../../docs/README.md';
+
+    private const README_LOCATION = __DIR__.'/../../../docs/README.md';
 
     private string $yaml;
 
@@ -36,12 +37,28 @@ class ReadmeExampleTest extends StateMachineTestCase
      */
     public function testReadmeExample()
     {
+        $wasCalled = [
+            'myActionFactory' => false,
+        ];
         $services = [
             'onBooted' => function () {
             },
             'onException' => function () {
             },
             'anotherErrorHandler' => function () {
+            },
+            'myGuardFactory' => function () {
+                return function (object $foo): bool {
+                    return true;
+                };
+            },
+            'myActionFactory' => function (string $lorem, string $ipsum) use (&$wasCalled) {
+                $wasCalled['myActionFactory'] = true;
+                $this->assertSame('ipsum', $ipsum);
+
+                return function (object $foo) {
+                    return true;
+                };
             },
             'sayMyName' => function (\stdClass $payload, StateInterface $state) {
                 $payload->result[] = (string)$state;
@@ -51,6 +68,7 @@ class ReadmeExampleTest extends StateMachineTestCase
             'guardBar_1_1' => fn(\stdClass $trigger): bool => $trigger->moveTo === 'bar_1_1',
             'guardBar_1_2' => fn(\stdClass $trigger): bool => $trigger->moveTo === 'bar_1_2',
             'helloWorldService' => ['hello' => 'world'],
+            'getIpsum' => 'ipsum',
         ];
         $loader = new YamlLoader($this->yaml, $this->createContainer($services));
         $definitions = $loader->definitions();
@@ -119,17 +137,21 @@ class ReadmeExampleTest extends StateMachineTestCase
         $m->trigger(new \Exception("some_error"));
         $this->assertTrue($m->isInState('error'));
 
-        foreach (['on','error'] as $contextStateName) {
+        foreach (['on', 'error'] as $contextStateName) {
             $state = $definitions->get($contextStateName);
             $context = $m->context($state);
             $this->assertTrue(isset($context['hello']));
             $this->assertSame($context['hello'], 'world');
+        }
+        foreach ($wasCalled as $item) {
+            $this->assertTrue($item);
         }
     }
 
     private function createContainer(array $services): ContainerInterface
     {
         return new class ($services) implements ContainerInterface {
+
             public function __construct(private array $services)
             {
             }
@@ -138,8 +160,8 @@ class ReadmeExampleTest extends StateMachineTestCase
             {
                 if (!$this->has($id)) {
                     throw new class ("Service '{$id}' not found") extends \Exception implements
-                        NotFoundExceptionInterface
-                    {
+                        NotFoundExceptionInterface {
+
                     };
                 }
 

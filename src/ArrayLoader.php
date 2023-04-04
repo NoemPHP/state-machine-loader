@@ -27,6 +27,7 @@ use Psr\Container\ContainerInterface;
 
 class ArrayLoader implements LoaderInterface
 {
+
     /**
      * @var StateInterface[]
      */
@@ -107,7 +108,14 @@ class ArrayLoader implements LoaderInterface
      */
     private function assertValidGraph()
     {
-        $nestedCallbackSchema = Expect::anyOf(Expect::string(), Expect::type('callable'));
+        $callbackShorthand = Expect::string();
+        $factoryCallback = Expect::structure([
+                'type' => Expect::string('factory'),
+                'factory' => $callbackShorthand,
+                'arguments' => Expect::listOf(Expect::mixed()),
+            ]
+        );
+        $nestedCallbackSchema = Expect::anyOf($callbackShorthand, $factoryCallback);
         $callbackSchema = Expect::anyOf(Expect::listOf($nestedCallbackSchema), $nestedCallbackSchema);
         $transitionSchema = Expect::anyOf(
             Expect::string(),

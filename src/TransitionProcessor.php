@@ -16,6 +16,7 @@ use Psr\Container\ContainerInterface;
  */
 class TransitionProcessor implements ProcessorInterface
 {
+
     use ServiceResolverTrait;
 
     private array $rawTransitions = [];
@@ -59,7 +60,7 @@ class TransitionProcessor implements ProcessorInterface
         $transitionProvider = new TransitionProvider($stateDefinitions);
         foreach ($this->rawTransitions as $rawTransition) {
             $guardDefinition = $rawTransition['guard'];
-            if (is_array($guardDefinition) && !is_callable($guardDefinition)) {
+            if (is_array($guardDefinition) && array_is_list($guardDefinition)) {
                 $guard = $this->createAggregateGuard($guardDefinition, $serviceLocator);
             } else {
                 $guard = $this->generateGuardParameter($guardDefinition, $serviceLocator);
@@ -78,12 +79,30 @@ class TransitionProcessor implements ProcessorInterface
      * @throws Exception\InvalidSchemaException
      */
     private function generateGuardParameter(
-        string|callable|null $definition,
+        string|array|null $definition,
         ContainerInterface $serviceLocator
     ): string|callable|null {
         if (!$definition) {
             return null;
         }
+        if (is_string($definition)) {
+            return $this->generateGuardFromShorthand($definition, $serviceLocator);
+        }
+        if (is_array($definition)) {
+            return $this->resolveArrayDefinition($definition, $serviceLocator);
+        }
+
+        throw new InvalidSchemaException(
+            [
+                'unknown' => "Could not process transition definition",
+            ]
+        );
+    }
+
+    private function generateGuardFromShorthand(
+        string $definition,
+        ContainerInterface $serviceLocator
+    ): callable|string {
         if (is_callable($definition)) {
             $handle = is_string($definition)
                 ? $definition
@@ -99,13 +118,16 @@ class TransitionProcessor implements ProcessorInterface
         if (class_exists($definition) || interface_exists($definition)) {
             return $definition;
         }
-        throw new InvalidSchemaException();
     }
 
     private function createAggregateGuard(array $guardDefinitions, ContainerInterface $serviceLocator)
     {
         $guards = array_map(fn($d) => $this->generateGuardParameter($d, $serviceLocator), $guardDefinitions);
 
+        //TODO: I should really think about modifying the interface to allow multiple guards
+        //      This is an ugly workaround at the cost of performance.
+        //      Maybe a simpler and perhaps cleaner approach would be to simply register multiple
+        //      individual transitions - analogous to other handlers
         return function (object $trigger) use ($guards): bool {
             $args = func_get_args();
             foreach ($guards as $guard) {
@@ -141,7 +163,7 @@ class TransitionProcessor implements ProcessorInterface
     {
         return match (true) {
             is_string($c) => $c,
-            is_array($c) => get_class($c[0]) . '::' . $c[1],
+            is_array($c) => get_class($c[0]).'::'.$c[1],
             default => get_class($c),
         };
     }
