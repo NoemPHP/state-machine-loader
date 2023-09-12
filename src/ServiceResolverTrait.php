@@ -9,7 +9,6 @@ use Psr\Container\ContainerInterface;
 
 trait ServiceResolverTrait
 {
-
     /**
      * @throws InvalidSchemaException
      */
@@ -82,7 +81,7 @@ trait ServiceResolverTrait
      */
     private function evalInlineDefinition(array $definition, CallbackType $callbackType): callable
     {
-        if(($callbackType===CallbackType::Guard||$callbackType==CallbackType::Action) && !isset($definition['trigger'])){
+        if (($callbackType === CallbackType::Guard || $callbackType == CallbackType::Action) && !isset($definition['trigger'])) {
             throw new InvalidSchemaException(
                 [
                     'unknown' => "Inline Guards and Actions must define a 'trigger' FQCN",
@@ -92,12 +91,12 @@ trait ServiceResolverTrait
         $functionBody = $definition['callback'];
         match ($callbackType) {
             CallbackType::onEntry, CallbackType::onExit => $signature = '$state, $from, $machine',
-            CallbackType::Action => $signature =$definition['trigger'].' $trigger, $state, $machine',
-            CallbackType::Guard => $signature =$definition['trigger'].' $trigger, $transition, $machine'
+            CallbackType::Action => $signature = $definition['trigger'] . ' $trigger, $state, $machine',
+            CallbackType::Guard => $signature = $definition['trigger'] . ' $trigger, $transition, $machine'
         };
         $code = '
-        return function ('.$signature.') {
-            '.$functionBody.'
+        return function (' . $signature . ') {
+            ' . $functionBody . '
         };
     ';
 

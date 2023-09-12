@@ -6,7 +6,6 @@ namespace Noem\State\Loader;
 
 enum CallbackType: string
 {
-
     case Action = 'action';
     case onEntry = 'onEntry';
     case onExit = 'onExit';
