@@ -9,16 +9,20 @@ use Psr\Container\ContainerInterface;
 
 trait ServiceResolverTrait
 {
+
     /**
      * @throws InvalidSchemaException
      */
-    private function resolveService($serviceDefinition, ContainerInterface $serviceLocator): callable
-    {
+    private function resolveService(
+        $serviceDefinition,
+        ContainerInterface $serviceLocator,
+        CallbackType $callbackType
+    ): callable {
         if (is_callable($serviceDefinition)) {
             return $serviceDefinition;
         }
         if (is_array($serviceDefinition)) {
-            return $this->resolveArrayDefinition($serviceDefinition, $serviceLocator);
+            return $this->resolveArrayDefinition($serviceDefinition, $serviceLocator, $callbackType);
         }
         if ($this->isService($serviceDefinition)) {
             $serviceName = substr($serviceDefinition, 1);
@@ -43,13 +47,18 @@ trait ServiceResolverTrait
         return $serviceLocator->get($parameter);
     }
 
+    /**
+     * @throws InvalidSchemaException
+     */
     private function resolveArrayDefinition(
         array $definition,
-        ContainerInterface $serviceLocator
+        ContainerInterface $serviceLocator,
+        CallbackType $callbackType
     ): callable {
-        switch ($definition['type']) {
-            case 'factory':
-                $factory = $this->resolveService($definition['factory'], $serviceLocator);
+        $callbackDefinitionType = CallbackDefinitonType::from($definition['type']);
+        switch ($callbackDefinitionType) {
+            case CallbackDefinitonType::Factory:
+                $factory = $this->resolveService($definition['factory'], $serviceLocator, $callbackType);
 
                 return $factory(
                     ...
@@ -58,12 +67,41 @@ trait ServiceResolverTrait
                         $definition['arguments']
                     )
                 );
+            case CallbackDefinitonType::Inline:
+                return $this->evalInlineDefinition($definition, $callbackType);
         }
         throw new InvalidSchemaException(
             [
                 'unknown' => "Could not process guard definition",
             ]
         );
+    }
+
+    /**
+     * @throws InvalidSchemaException
+     */
+    private function evalInlineDefinition(array $definition, CallbackType $callbackType): callable
+    {
+        if(($callbackType===CallbackType::Guard||$callbackType==CallbackType::Action) && !isset($definition['trigger'])){
+            throw new InvalidSchemaException(
+                [
+                    'unknown' => "Inline Guards and Actions must define a 'trigger' FQCN",
+                ]
+            );
+        }
+        $functionBody = $definition['callback'];
+        match ($callbackType) {
+            CallbackType::onEntry, CallbackType::onExit => $signature = '$state, $from, $machine',
+            CallbackType::Action => $signature =$definition['trigger'].' $trigger, $state, $machine',
+            CallbackType::Guard => $signature =$definition['trigger'].' $trigger, $transition, $machine'
+        };
+        $code = '
+        return function ('.$signature.') {
+            '.$functionBody.'
+        };
+    ';
+
+        return eval($code);
     }
 
     private function isService(string $defined): bool

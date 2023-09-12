@@ -107,8 +107,54 @@ you are more or less forced to create some version of a `hasBeenInStateForFiveSe
 If you want to use the same logic to wait for 10 seconds elsewhere in your application, you're in a tough situation now.
 With a factory definition, you can instead write a `createTimeoutGuard` which can return guards for any interval you want.
 
-#### Parameters
- 
+##### Inline
+
+Inline handlers are a way to write your handlers directly into YAML, rather than defining them as functions in a service container.
+
+```yaml
+my_state:
+    onEntry:
+        type: inline
+        # language=injectablephp
+        callback: |
+            $context = $machine->context($transition->source());
+            $context['greeting'] = 'Hello World!';
+```
+Since `action` and `guard` callbacks leverage PSR-14-style parameter inspections, it is neccessary to specify an additional argument for them:
+
+```yaml
+baz:
+    action: 
+      # Note the additional 'trigger'
+      type: 'inline'
+      callback: |
+          echo 'Hello ' . $trigger;
+      trigger: '\Stringable'
+
+```
+
+This is useful if you want to keep things simple and don't need to reuse the handler elsewhere in your codebase.
+It is also a great way to start prototyping quickly. Since this is intended for basic scripting, you only supply the *function body itself*. 
+You can use the following variables within your inline callbacks:
+
+###### Types `onEntry` & `onExit`
+* `$state` - The state object where the handler is registered
+* `$from` - The state that is being transitioned away from. (In simple machines, this might be the same as `$state`, but it is very much possible for a machine to be in many states at once)
+* `$machine` - The state machine object
+
+###### Type `action`
+* `$trigger` - The object that triggered the action
+* `$state` - The state object where the handler is registered
+* `$machine` - The state machine object
+
+###### Type `guard`
+* `$trigger` - The object that triggered the transition
+* `$transition` - The transition object
+* `$machine` - The state machine object
+
+---
+
+
 
 ## Full example
 
@@ -163,6 +209,12 @@ on:
                 arguments:
                     - 'lorem'
                     - '%getIpsum%'
+              # Write raw PHP directly!
+              # Note the additional 'trigger'
+              - type: 'inline'
+                callback: |
+                    echo 'Hello World';
+                trigger: '\stdClass'
             children:
                 substate1:
                     action: '@sayMyName'
@@ -175,6 +227,11 @@ on:
                             # Multiple guards for one transition are possible. Any of them can allow the transition
                               - '@someOtherGuard'
                               - '@guardSubstate3'
+                            # Write raw PHP directly!
+                              - type: 'inline'
+                                callback: |
+                                    return false;
+                                trigger: '\stdClass'
                 substate3:
                     action: '@sayMyName'
 

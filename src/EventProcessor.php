@@ -15,6 +15,7 @@ use Psr\Container\ContainerInterface;
  */
 class EventProcessor implements ProcessorInterface
 {
+
     use ServiceResolverTrait;
 
     private array $eventByState = [];
@@ -40,32 +41,33 @@ class EventProcessor implements ProcessorInterface
 
         foreach ($this->eventByState as $state => $eventsByType) {
             foreach ($eventsByType as $type => $events) {
-                switch ($type) {
-                    case 'onEntry':
+                $callbackType = CallbackType::from($type);
+                switch ($callbackType) {
+                    case CallbackType::onEntry:
                         array_walk(
                             $events,
                             fn($e) => $em->addEnterStateHandler(
                                 $stateDefinitions->get($state),
-                                $this->resolveService($e, $serviceLocator)
+                                $this->resolveService($e, $serviceLocator, $callbackType)
                             )
                         );
                         break;
-                    case 'onExit':
+                    case CallbackType::onExit:
                         array_walk(
                             $events,
                             fn($e) => $em->addExitStateHandler(
                                 $stateDefinitions->get($state),
-                                $this->resolveService($e, $serviceLocator)
+                                $this->resolveService($e, $serviceLocator, $callbackType)
                             )
                         );
                         break;
-                    case 'action':
+                    case CallbackType::Action:
                         array_walk(
                             $events,
                             fn($e) => $em->addActionHandler(
                                 $stateDefinitions->get($state),
                                 $this->assertValidAction(
-                                    $this->resolveService($e, $serviceLocator),
+                                    $this->resolveService($e, $serviceLocator, $callbackType),
                                     [$state, $e]
                                 )
                             )

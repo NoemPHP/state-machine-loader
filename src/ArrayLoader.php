@@ -27,6 +27,7 @@ use Psr\Container\ContainerInterface;
 
 class ArrayLoader implements LoaderInterface
 {
+
     /**
      * @var StateInterface[]
      */
@@ -109,11 +110,16 @@ class ArrayLoader implements LoaderInterface
     {
         $callbackShorthand = Expect::string();
         $factoryCallback = Expect::structure([
-                'type' => Expect::string('factory'),
-                'factory' => $callbackShorthand,
-                'arguments' => Expect::listOf(Expect::mixed()),
-            ]);
-        $nestedCallbackSchema = Expect::anyOf($callbackShorthand, $factoryCallback);
+            'type' => Expect::string('factory')->required(),
+            'factory' => $callbackShorthand->required(),
+            'arguments' => Expect::listOf(Expect::mixed()),
+        ]);
+        $inlineCallback = Expect::structure([
+            'type' => Expect::string('inline')->required(),
+            'callback' => Expect::string()->required(),
+            'trigger' => Expect::string(),
+        ]);
+        $nestedCallbackSchema = Expect::anyOf($callbackShorthand, $factoryCallback, $inlineCallback);
         $callbackSchema = Expect::anyOf(Expect::listOf($nestedCallbackSchema), $nestedCallbackSchema);
         $transitionSchema = Expect::anyOf(
             Expect::string(),

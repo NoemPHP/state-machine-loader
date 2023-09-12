@@ -16,6 +16,7 @@ use Psr\Container\ContainerInterface;
  */
 class TransitionProcessor implements ProcessorInterface
 {
+
     use ServiceResolverTrait;
 
     private array $rawTransitions = [];
@@ -88,7 +89,7 @@ class TransitionProcessor implements ProcessorInterface
             return $this->generateGuardFromShorthand($definition, $serviceLocator);
         }
         if (is_array($definition)) {
-            return $this->resolveArrayDefinition($definition, $serviceLocator);
+            return $this->resolveArrayDefinition($definition, $serviceLocator, CallbackType::Guard);
         }
 
         throw new InvalidSchemaException(
@@ -111,7 +112,10 @@ class TransitionProcessor implements ProcessorInterface
         }
 
         if ($this->isService($definition)) {
-            return $this->assertValidGuard($this->resolveService($definition, $serviceLocator), $definition);
+            return $this->assertValidGuard(
+                $this->resolveService($definition, $serviceLocator, CallbackType::Guard),
+                $definition
+            );
         }
 
         if (class_exists($definition) || interface_exists($definition)) {
@@ -162,7 +166,7 @@ class TransitionProcessor implements ProcessorInterface
     {
         return match (true) {
             is_string($c) => $c,
-            is_array($c) => get_class($c[0]) . '::' . $c[1],
+            is_array($c) => get_class($c[0]).'::'.$c[1],
             default => get_class($c),
         };
     }
