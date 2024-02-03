@@ -33,7 +33,7 @@ trait ServiceResolverTrait
 
             return $serviceLocator->get($serviceName);
         }
-        throw new InvalidSchemaException([$serviceDefinition => "Could not resolve event handler"]);
+        throw new InvalidSchemaException([$serviceDefinition => "Could not resolve event handler {$serviceDefinition}"]);
     }
 
     private function resolveParameter(string $parameter, ContainerInterface $serviceLocator)

@@ -15,6 +15,7 @@ use Psr\Container\ContainerInterface;
  */
 class EventProcessor implements ProcessorInterface
 {
+
     use ServiceResolverTrait;
 
     private array $eventByState = [];
@@ -26,7 +27,11 @@ class EventProcessor implements ProcessorInterface
                 if (!isset($this->eventByState[$name][$key])) {
                     $this->eventByState[$name][$key] = [];
                 }
-                $this->eventByState[$name][$key] += (array)$data[$key];
+                $definition = $data[$key];
+                if (is_string($definition) || !array_is_list($definition)) {
+                    $definition = [$definition];
+                }
+                $this->eventByState[$name][$key] += $definition;
             }
         }
     }
@@ -41,6 +46,7 @@ class EventProcessor implements ProcessorInterface
         foreach ($this->eventByState as $state => $eventsByType) {
             foreach ($eventsByType as $type => $events) {
                 $callbackType = CallbackType::from($type);
+                //if(!array_is_list($events))
                 switch ($callbackType) {
                     case CallbackType::onEntry:
                         array_walk(

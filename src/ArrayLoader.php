@@ -45,8 +45,9 @@ class ArrayLoader implements LoaderInterface
     private ContextProcessor $contextProcessor;
 
     public function __construct(
-        private array $stateGraph,
-        ?ContainerInterface $serviceLocator = null
+        private array       $stateGraph,
+        ?ContainerInterface $serviceLocator = null,
+        private ?array      $globalContext = []
     ) {
         $this->serviceLocator = $serviceLocator ?? new FallbackContainer();
     }
@@ -81,7 +82,11 @@ class ArrayLoader implements LoaderInterface
      */
     public function context(): ContextProviderInterface
     {
-        return $this->contextProcessor->create($this->definitions(), $this->serviceLocator);
+        $provider = $this->contextProcessor->create($this->definitions(), $this->serviceLocator);
+        assert($provider instanceof ContainerAwareContextProvider);
+        $provider->setGlobalContext($this->globalContext);
+
+        return $provider;
     }
 
     /**

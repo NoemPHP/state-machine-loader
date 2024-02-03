@@ -12,6 +12,8 @@ use Psr\Container\ContainerInterface;
 
 class ContainerAwareContextProvider implements ContextProviderInterface
 {
+    private array $globalContext = [];
+
     public function __construct(private ContainerInterface $container)
     {
     }
@@ -24,6 +26,11 @@ class ContainerAwareContextProvider implements ContextProviderInterface
             assert(is_array($data));
         }
 
-        return new Context($trigger, $data);
+        return new Context($trigger, array_merge($this->globalContext, $data));
+    }
+
+    public function setGlobalContext(array $data): void
+    {
+        $this->globalContext = $data;
     }
 }
