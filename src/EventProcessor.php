@@ -15,7 +15,6 @@ use Psr\Container\ContainerInterface;
  */
 class EventProcessor implements ProcessorInterface
 {
-
     use ServiceResolverTrait;
 
     private array $eventByState = [];
